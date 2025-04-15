@@ -1,9 +1,9 @@
 pipeline{
     agent none
     environment{
-        BUILD_SERVER_IP='ec2-user@172.31.14.13'
-       IMAGE_NAME='devopstrainer/java-mvn-privaterepos:php$BUILD_NUMBER'
-       DEPLOY_SERVER_IP='ec2-user@172.31.1.112'
+        DEV_SERVER='ec2-user@18.233.154.26'
+        IMAGE_NAME='ajaynani117/test:php$BUILD_NUMBER'
+        TEST_SERVER='ec2-user@204.236.192.93'
     }
 
     stages{
@@ -12,14 +12,14 @@ pipeline{
             agent any
             steps{
                 script{
-                sshagent(['slave2']) {
+                sshagent(['DEV_SERVER']) {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                 echo "Building the php image"
-                sh "scp -o StrictHostKeyChecking=no -r BuildConfig ${BUILD_SERVER_IP}:/home/ec2-user"
-                sh "ssh -o StrictHostKeyChecking=no ${BUILD_SERVER_IP} 'bash ~/BuildConfig/docker-script.sh'"
-                sh "ssh ${BUILD_SERVER_IP} sudo docker build -t ${IMAGE_NAME} /home/ec2-user/BuildConfig/"
-                sh "ssh ${BUILD_SERVER_IP} sudo docker login -u $USERNAME -p $PASSWORD"
-                sh "ssh ${BUILD_SERVER_IP} sudo docker push ${IMAGE_NAME}"
+                sh "scp -o StrictHostKeyChecking=no -r BuildConfig ${DEV_SERVER}:/home/ec2-user"
+                sh "ssh -o StrictHostKeyChecking=no ${DEV_SERVER} 'bash ~/BuildConfig/docker-script.sh'"
+                sh "ssh ${DEV_SERVER} sudo docker build -t ${IMAGE_NAME} /home/ec2-user/BuildConfig/"
+                sh "ssh ${DEV_SERVER} sudo docker login -u $USERNAME -p $PASSWORD"
+                sh "ssh ${DEV_SERVER} sudo docker push ${IMAGE_NAME}"
                 }
             }
         }
@@ -29,13 +29,13 @@ stage('RUN PHP_DB with Dockercompose'){
             agent any
             steps{
                 script{
-                sshagent(['slave2']) {
+                sshagent(['TEST_SERVER']) {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                 echo "Deploy PHP and Sql containers"
-                sh "scp -o StrictHostKeyChecking=no -r deployConfig ${DEPLOY_SERVER_IP}:/home/ec2-user"
-                sh "ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER_IP} 'bash ~/deployConfig/docker-script.sh'"
-                sh "ssh ${DEPLOY_SERVER_IP} sudo docker login -u $USERNAME -p $PASSWORD"
-                sh "ssh ${DEPLOY_SERVER_IP} bash /home/ec2-user/deployConfig/docker-compose-script.sh ${IMAGE_NAME}"
+                sh "scp -o StrictHostKeyChecking=no -r deployConfig ${TEST_SERVER}:/home/ec2-user"
+                sh "ssh -o StrictHostKeyChecking=no ${TEST_SERVER} 'bash ~/deployConfig/docker-script.sh'"
+                sh "ssh ${TEST_SERVER} sudo docker login -u $USERNAME -p $PASSWORD"
+                sh "ssh ${TEST_SERVER} bash /home/ec2-user/deployConfig/docker-compose-script.sh ${IMAGE_NAME}"
                 }
             }
         }
