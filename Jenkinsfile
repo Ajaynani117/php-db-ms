@@ -1,9 +1,9 @@
 pipeline{
     agent none
     environment{
-        DEV_SERVER='ec2-user@18.233.154.26'
+        DEV_SERVER='ec2-user@100.26.112.11'
         IMAGE_NAME='ajaynani117/test:php$BUILD_NUMBER'
-        TEST_SERVER='ec2-user@204.236.192.93'
+        TEST_SERVER='ec2-user@54.234.57.195'
     }
 
     stages{
